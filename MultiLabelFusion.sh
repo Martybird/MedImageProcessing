@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # multi-class label fusion with fuzzy labels
+# Yiming Xiao, March 4th, 2017
+
 
 function usage {
 echo "
