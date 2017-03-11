@@ -42,7 +42,7 @@ labelList=$workDir/labelfile.txt
 classNum=$(wc -l < $labelList)
 
 
-if [ $# -ne 6 ] || [ $classNum -lt 2 ]; then
+if [ $# -ne 5 ] || [ $classNum -lt 2 ]; then
   usage;
   exit 1;
 fi
