@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # multi-class label fusion with fuzzy labels
+# the atlas library should only contain basenames of the templates and label maps
+# for example, $basename_t1.mnc & $basename_label.mnc
 # Yiming Xiao, March 4th, 2017
 
 
@@ -8,20 +10,36 @@ function usage {
 echo "
 
 Usage:
-   MultiLabelfusion.sh <target_image.mnc> <library_list.txt> <ref_vol> <# of label classes> <workdir> <output.mnc>
+   MultiLabelfusion.sh <target_image.mnc> <library_list.txt> <ref_vol> <No. of label classes> <workdir> <output.mnc>
 
    library_list.txt should only contain the basename of the lib subject
 
 "
 }
+
 set -e
 
 target="$1"
 libList="$2"
 ref_vol="$3"
-classNum="$4"
-workDir="$5"
-output="$6"
+workDir="$4"
+output="$5"
+
+
+if [[ ! -d $workDir ]];then
+  mkdir $workDir
+else
+  echo "$workDir exists!"
+  usage;
+  exit 1;
+fi
+
+
+# read the first lable file
+modellabel=$(head -n 1 $libList)
+print_all_labels $modellabel-label.mnc >> $workDir/labelfile.txt
+labelList=$workDir/labelfile.txt
+classNum=$(wc -l < $labelList)
 
 
 if [ $# -ne 6 ] || [ $classNum -lt 2 ]; then
@@ -29,7 +47,27 @@ if [ $# -ne 6 ] || [ $classNum -lt 2 ]; then
   exit 1;
 fi
 
-mkdir $workDir
+
+# get the label number and IDs
+
+declare -a labelID
+
+idCount=0
+while IFS= read -r line
+do
+
+  IFS=':' read -r title content <<< "$line"
+  IFS=' ' read -r id vox <<< "$content"
+
+  labelID[$idCount]=$id # read in all the label IDs
+  idCount=$[idCount + 1]
+  echo $id
+
+done <"$labelList"
+
+echo "${labelID[0]}"
+
+
 
 COUNT=0
 # go through the library list to genate deformation and resample labels
@@ -51,9 +89,12 @@ do
 
   for j in $(seq 1 $classNum)
   do
-    Lup=$(echo "scale=2; $j + 0.5" | bc)
+
+     k=${labelID[$[j - 1]]}
+
+    Lup=$(echo "scale=2; $k + 0.5" | bc)
     Lup=$(printf "%.2g" $Lup)
-    Lbl=$(echo "scale=2; $j - 0.5" | bc)
+    Lbl=$(echo "scale=2; $k - 0.5" | bc)
     Lbl=$(printf "%.2g" $Lbl)
 
     # named labels
@@ -95,7 +136,7 @@ done
 
 # first deal with the background
 # update label
-minccalc -expr "A[0]>A[1]?0:1"  $workDir/All-label-0-norm.mnc $workDir/All-label-1-norm.mnc $workDir/Final-label-1-norm.mnc -short -clobber
+minccalc -expr "A[0]>A[1]?0:${labelID[0]}"  $workDir/All-label-0-norm.mnc $workDir/All-label-1-norm.mnc $workDir/Final-label-1-norm.mnc -short -clobber
 # update prob map
 minccalc -expr "A[0]>A[1]?A[0]:A[1]" $workDir/All-label-0-norm.mnc $workDir/All-label-1-norm.mnc $workDir/Final-value-1-norm.mnc -short -clobber
 
@@ -104,8 +145,9 @@ minccalc -expr "A[0]>A[1]?A[0]:A[1]" $workDir/All-label-0-norm.mnc $workDir/All-
 for i in $(seq 2 $classNum)
 do
 
+  k=${labelID[$[i - 1]]}
   # update label
-  minccalc -expr "A[0]>A[1]?A[2]:$i"  $workDir/Final-value-$[i - 1]-norm.mnc $workDir/All-label-$i-norm.mnc $workDir/Final-label-$[i - 1]-norm.mnc $workDir/Final-label-$i-norm.mnc -short -clobber
+  minccalc -expr "A[0]>A[1]?A[2]:$k"  $workDir/Final-value-$[i - 1]-norm.mnc $workDir/All-label-$i-norm.mnc $workDir/Final-label-$[i - 1]-norm.mnc $workDir/Final-label-$i-norm.mnc -short -clobber
   # update prob map
   minccalc -expr "A[0]>A[1]?A[0]:A[1]" $workDir/Final-value-$[i - 1]-norm.mnc $workDir/All-label-$i-norm.mnc $workDir/Final-value-$i-norm.mnc -short -clobber
 
