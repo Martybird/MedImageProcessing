@@ -15,3 +15,7 @@ in advanced Parkinson's disease patients using automatic segmentation and PCA-ba
 vol.35(9), pp. 4330-4344, 2014.
 
 
+2. T1-preprocess.sh
+
+Process a single T1 head MRI using MINC toolkit
+The script outputs a skull-stripped MRI in ICBM152 stereotactic space, and the image is processed with N4 field inhomogeneity correction followed by a linear image intensity normalization procedure.
