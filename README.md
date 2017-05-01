@@ -20,3 +20,8 @@ vol.35(9), pp. 4330-4344, 2014.
 Process a single T1 head MRI using MINC toolkit.
 
 The script outputs a skull-stripped MRI in ICBM152 stereotactic space, and the image is processed with N4 field inhomogeneity correction followed by a linear image intensity normalization procedure.
+
+
+3. How to use register
+
+The instruction explains how to install MINC Toolkit, and use the software package 'register' to view and tag landmarks for medical images. The document uses ultrasound images of the brain to demonstrate the software.
