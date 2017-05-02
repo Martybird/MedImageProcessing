@@ -10,7 +10,7 @@ function usage {
 echo "
 
 Usage:
-   MultiLabelfusion.sh <target_image.mnc> <library_list.txt> <ref_vol> <No. of label classes> <workdir> <output.mnc>
+   MultiLabelfusion.sh <target_image.mnc> <library_list.txt> <ref_vol> <workdir> <output.mnc>
 
    library_list.txt should only contain the basename of the lib subject
 
